@@ -41,12 +41,15 @@ def runga_kutta():
     nmax = int(duration * fps)
     h = dt
 
-    lastomega = np.array([1.0, 1.0, 1.0])
+    omegas.append(np.array([1.0, 1.0, 1.0]))
+    omegasx.append(1.0)
+    omegasy.append(1.0)
+    omegasz.append(1.0)
 
-    for n in range(0, nmax):
-        kx = lastomega[0]
-        ky = lastomega[1]
-        kz = lastomega[2]
+    for n in range(1, nmax):
+        kx = omegas[n - 1][0]
+        ky = omegas[n - 1][1]
+        kz = omegas[n - 1][2]
 
         kx1 = -G1 * h * ky * kz
         ky1 = -G2 * h * kx * kz
@@ -68,13 +71,10 @@ def runga_kutta():
         wy = ky + (ky1 / 6) + (ky2 / 3) + (ky3 / 3) + (ky4 / 6)
         wz = kz + (kz1 / 6) + (kz2 / 3) + (kz3 / 3) + (kz4 / 6)
 
-        lastomega = np.array([wx, wy, wz])
-        newomega = lastomega
-
-        omegas.append(lastomega)
-        omegasx.append(lastomega[0])
-        omegasy.append(lastomega[1])
-        omegasz.append(lastomega[2])
+        omegas.append(np.array([wx, wy, wz]))
+        omegasx.append(wx)
+        omegasy.append(wy)
+        omegasz.append(wz)
 
 def dot(a, b):
     return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
@@ -116,8 +116,8 @@ def update():
     surf.remove()
 
 #mpl.interactive(True)
-#fig.set_size_inches(6, 6)
 #fig = plt.figure()
+#fig.set_size_inches(6, 6)
 #ax = fig.gca(projection='3d')
 
 #ax.set_autoscale_on(False)
@@ -130,20 +130,22 @@ fps = 16.0
 dt = 1.0/fps
 duration = 16.0
 
-a = 1.0
-c = 4.0
+a = 3.0
+b = 2.0
+c = 1.0
 M = 3.14
 
 n = 16
 theta = np.linspace(0, 2.*np.pi, n)
 phi = np.linspace(0, 2.*np.pi, n)
 theta, phi = np.meshgrid(theta, phi)
-x = (c + a * np.cos(theta)) * np.cos(phi)
-y = (c + a * np.cos(theta)) * np.sin(phi)
-z = a * np.sin(theta)
+x = (a * np.cos(theta)) * np.sin(phi)
+y = (b * np.sin(theta)) * np.sin(phi)
+z = c * np.cos(phi)
 
-I1 = I2 = (1.0 / 8.0) * (5.0 * a**2 + 4.0 * c**2) * M
-I3 = (3.0 / 4.0 * a**2 + c**2) * M
+I1 = (1.0 / 5.0) * (b**2 + c**2) * M
+I2 = (1.0 / 5.0) * (a**2 + c**2) * M
+I3 = (1.0 / 5.0) * (a**2 + b**2) * M
 G1 = (I3 - I2) / I1
 G2 = (I1 - I3) / I2
 G3 = (I2 - I1) / I3
@@ -159,16 +161,20 @@ fixedomegasz = []
 frame = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
 
 runga_kutta()
-find_fixed_omegas()
+#find_fixed_omegas()
 
 times = []
 
 for t in range(0, int(duration * fps)):
     times.append(t * dt)
 
-plt.plot(times, fixedomegasx)
-plt.plot(times, fixedomegasy)
-plt.plot(times, fixedomegasz)
+plt.plot(times, omegasx)
+plt.plot(times, omegasy)
+plt.plot(times, omegasz)
+plt.show()
+fig = plt.figure()
+ax = fig.gca(projection='3d')
+ax.plot(omegasx, omegasy, omegasz)
 plt.show()
 
 while True:
